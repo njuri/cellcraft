@@ -16,13 +16,14 @@ const emptyBorderedCell = { v: "", s: allBordersStyleCentered };
 
 const drawGroups = (location, groups, worksheet) => {
   let baseRow = location.r;
+  const map = new Map();
 
   for (let i = 0; i < groups.length; i += 1) {
     // Calculate the starting row for the current group
     const groupLocation = { r: baseRow, c: location.c };
 
     // Draw the current group
-    drawGroup(groupLocation, groups[i], worksheet);
+    drawGroup(groupLocation, groups[i], worksheet, map);
 
     // Calculate the number of rows the current group occupied
     // Each subgroup of 4 products takes 17 rows, and we add 2 rows for the header
@@ -31,9 +32,11 @@ const drawGroups = (location, groups, worksheet) => {
     // Update the baseRow for the next group, adding an additional row for extra spacing
     baseRow += groupRows + 1;
   }
+
+  return map;
 };
 
-const drawGroup = (location, group, worksheet) => {
+const drawGroup = (location, group, worksheet, map) => {
   worksheet[XLSX.utils.encode_cell(location)] = {
     v: group.category,
     s: {
@@ -51,6 +54,7 @@ const drawGroup = (location, group, worksheet) => {
     for (let j = 0; j < subGroup.length; j++) {
       const loc = { r: location.r + 2 + subGroupIndex * 17, c: location.c + j * 5 };
       drawTable(loc, subGroup[j], worksheet);
+      map.set(subGroup[j].id, { r: loc.r + 1, c: loc.c });
     }
   }
 };
