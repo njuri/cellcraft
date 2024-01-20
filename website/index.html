@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XLSX Processor</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>🤖</text></svg>"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"
+      integrity="sha512-dlPw+ytv/6JyepmelABrgeYgHI0O+frEwgfnPdXDTOIZz+eDgfW07QXG02/O8COfivBdGNINy+Vex+lYmJ5rxw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="
+https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js
+"></script>
+  </head>
+  <body>
+    <div class="main-container">
+      <header class="header">
+        <h1>🤖</h1>
+        <p>Выбери <img src="./excel.png" style="height: 18pt; margin: 2pt" /> файл 🤓</p>
+      </header>
+      <div class="upload-container">
+        <input type="file" id="fileInput" name="file" accept=".xlsx, .xls" class="upload-input" />
+        <button id="processButton" class="button process-button">Обработать</button>
+        <button id="downloadLink" class="button download-button" style="display: none">
+          <img src="./download.png" />
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

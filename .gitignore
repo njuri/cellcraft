@@ -1,0 +1,15 @@
+# === Rules for `node_modules` ===
+!**/node_modules/**
+/node_modules
+/tools/doc/node_modules
+/tools/clang-format/node_modules
+
+# === Global Rules ===
+# Keep last to avoid being excluded
+*.pyc
+__pycache__
+.DS_Store
+*~
+
+/res
+/output
