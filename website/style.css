@@ -130,16 +130,11 @@ body {
   pointer-events: none; /* Ensures click events pass through to underlying elements */
 }
 
-.hare,
 .kitten {
   position: fixed;
   width: 70px; /* Adjust size as needed */
   height: 70px; /* Adjust size as needed */
   background-size: cover;
-}
-
-.hare {
-  background-image: url("./hare.gif"); /* Path to hare image */
 }
 
 .kitten {
