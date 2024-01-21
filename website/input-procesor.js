@@ -1,5 +1,5 @@
-export function processData(data) {
-  const workbook = XLSX.read(data, { type: "array" });
+export async function processData(dataBuffer, imageBuffer) {
+  const workbook = XLSX.read(dataBuffer, { type: "array" });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const products = mapWorksheetToProducts(worksheet);
@@ -9,12 +9,15 @@ export function processData(data) {
   newWorksheet["!ref"] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: products.length * 15, c: 30 });
 
   const cellAddress = { r: 0, c: 1 };
-  drawGroups(cellAddress, groups, newWorksheet);
+  const idMap = drawGroups(cellAddress, groups, newWorksheet);
 
   const newWorkbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, "Report");
 
-  return newWorkbook;
+  const newBuffer = XLSX.write(newWorkbook, { type: "array", bookType: "xlsx" });
+  const finalWorkbook = await processWorksheet(newBuffer, imageBuffer, idMap);
+
+  return finalWorkbook;
 }
 
 class Product {
@@ -32,6 +35,7 @@ class Product {
   netSalesSum; // 8
   retailSoldPercentage; // 11
   currency; // 13
+  material; // 14
 
   constructor(
     category,
@@ -47,7 +51,8 @@ class Product {
     finalBalance,
     netSalesSum,
     retailSoldPercentage,
-    currency
+    currency,
+    material
   ) {
     this.category = category;
     this.id = id;
@@ -63,6 +68,7 @@ class Product {
     this.netSalesSum = netSalesSum;
     this.retailSoldPercentage = retailSoldPercentage;
     this.currency = currency;
+    this.material = material;
   }
 }
 
@@ -97,7 +103,8 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[12],
         obj[8],
         obj[11],
-        obj[13]
+        obj[13],
+        obj[14]
       )
     );
   }
@@ -136,24 +143,27 @@ const emptyBorderedCell = { v: "", s: allBordersStyleCentered };
 
 const drawGroups = (location, groups, worksheet) => {
   let baseRow = location.r;
+  const map = new Map();
 
   for (let i = 0; i < groups.length; i += 1) {
     // Calculate the starting row for the current group
     const groupLocation = { r: baseRow, c: location.c };
 
     // Draw the current group
-    drawGroup(groupLocation, groups[i], worksheet);
+    drawGroup(groupLocation, groups[i], worksheet, map);
 
     // Calculate the number of rows the current group occupied
     // Each subgroup of 4 products takes 17 rows, and we add 2 rows for the header
-    const groupRows = Math.ceil(groups[i].products.length / 4) * 17 + 2;
+    const groupRows = Math.ceil(groups[i].products.length / 3) * 17 + 2;
 
     // Update the baseRow for the next group, adding an additional row for extra spacing
     baseRow += groupRows + 1;
   }
+
+  return map;
 };
 
-const drawGroup = (location, group, worksheet) => {
+const drawGroup = (location, group, worksheet, map) => {
   worksheet[XLSX.utils.encode_cell(location)] = {
     v: group.category,
     s: {
@@ -164,13 +174,14 @@ const drawGroup = (location, group, worksheet) => {
     },
   };
 
-  for (let i = 0; i < group.products.length; i += 4) {
-    let subGroup = group.products.slice(i, i + 4);
-    let subGroupIndex = i / 4;
+  for (let i = 0; i < group.products.length; i += 3) {
+    let subGroup = group.products.slice(i, i + 3);
+    let subGroupIndex = i / 3;
 
     for (let j = 0; j < subGroup.length; j++) {
       const loc = { r: location.r + 2 + subGroupIndex * 17, c: location.c + j * 5 };
       drawTable(loc, subGroup[j], worksheet);
+      map.set(subGroup[j].id, { r: loc.r + 1, c: loc.c });
     }
   }
 };
@@ -274,7 +285,7 @@ const drawDataCells = (headerLocation, product, worksheet) => {
   worksheet[cell30] = cellWithValue("Hind");
   worksheet[cell31] = cellWithValue(product.purchasePrice);
   worksheet[cell32] = cellWithValue(product.currency);
-  worksheet[cell33] = emptyBorderedCell;
+  worksheet[cell33] = cellWithValue(product.material);
 };
 
 const cellAtIndex = (address) => {
@@ -288,3 +299,74 @@ const cellWithValue = (value) => {
 const cellWithValueAndStyle = (value, style) => {
   return { v: value, s: style };
 };
+
+const processWorksheet = async (dataWorksheetBuffer, imageWorksheetBuffer, idMap) => {
+  const dataWorkbook = await readWorkbookBuffer(dataWorksheetBuffer).catch((err) => console.error(err));
+
+  await readImageWorkbookBuffer(imageWorksheetBuffer, dataWorkbook, idMap);
+  return dataWorkbook;
+};
+
+async function readWorkbookBuffer(buffer) {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+
+  const worksheet = workbook.worksheets[0];
+
+  const outWorkbook = new ExcelJS.Workbook();
+  const outWorksheet = outWorkbook.addWorksheet("Report");
+
+  // Copy cells and styles
+  worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+    row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+      const newCell = outWorksheet.getRow(rowNumber).getCell(colNumber);
+      newCell.value = cell.value;
+      newCell.style = cell.style;
+    });
+  });
+
+  // Copy merged cells
+  worksheet.model.merges.forEach((merge) => {
+    outWorksheet.mergeCells(merge);
+  });
+
+  return outWorkbook;
+}
+
+function getCellAtIndex(worksheet, r, c) {
+  return worksheet.getRow(r + 1).getCell(c + 1);
+}
+
+function extractFirstNumber(str) {
+  const result = str.match(/\d+/);
+  return result ? parseInt(result[0], 10) : null;
+}
+
+async function readImageWorkbookBuffer(inputBuffer, inputWorkbook, idMap) {
+  const imagesWorkbook = new ExcelJS.Workbook();
+  await imagesWorkbook.xlsx.load(inputBuffer);
+  const imagesWorksheet = imagesWorkbook.worksheets[0];
+  const inputWorksheet = inputWorkbook.worksheets[0];
+
+  for (const image of imagesWorksheet.getImages()) {
+    const img = imagesWorkbook.model.media.find((m) => m.index === image.imageId);
+
+    const imageRow = image.range.tl.nativeRow;
+    const imageCol = image.range.tl.nativeCol;
+    const textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
+    const id = extractFirstNumber(textCellValue);
+    const address = idMap.get(id);
+
+    if (img) {
+      const imageId = inputWorkbook.addImage({
+        buffer: img.buffer,
+        extension: img.extension,
+      });
+
+      inputWorksheet.addImage(imageId, {
+        tl: { col: address.c, row: address.r - 1 },
+        br: { col: address.c + 4, row: address.r + 9 },
+      });
+    }
+  }
+}

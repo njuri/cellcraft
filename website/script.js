@@ -1,36 +1,47 @@
 import { processData } from "./input-procesor.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("processButton").addEventListener("click", function () {
-    const fileInput = document.getElementById("fileInput");
-    const file = fileInput.files[0];
+  document.getElementById("processButton").addEventListener("click", async function () {
+    const dataFileInput = document.getElementById("dataFileInput");
+    const imageFileInput = document.getElementById("imageFileInput");
 
-    if (!file) return;
+    const dataFile = dataFileInput.files[0];
+    const imageFile = imageFileInput.files[0];
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const data = new Uint8Array(e.target.result);
+    if (!dataFile || !imageFile) {
+      console.error("Both files must be selected");
+      return;
+    }
 
-      // Writing back to binary
-      const workbook = processData(data);
-      const processedWorkbook = XLSX.write(workbook, { bookType: "xlsx", type: "binary" });
+    const dataFileArrayBuffer = await readFileAsArrayBuffer(dataFile);
+    const imageFileArrayBuffer = await readFileAsArrayBuffer(imageFile);
 
-      function s2ab(s) {
-        const buffer = new ArrayBuffer(s.length);
-        const view = new Uint8Array(buffer);
-        for (let i = 0; i < s.length; i++) {
-          view[i] = s.charCodeAt(i) & 0xff;
-        }
-        return buffer;
-      }
+    showSpinner(true);
 
-      const processedData = s2ab(processedWorkbook);
-      const fileName = file.name.replace(/\.[^/.]+$/, "");
-      createAndDownloadFile(processedData, `${fileName}_report.xlsx`);
-    };
-    reader.readAsArrayBuffer(file);
+    try {
+      await processDataFiles(dataFileArrayBuffer, imageFileArrayBuffer, dataFile);
+    } finally {
+      showSpinner(false);
+    }
   });
 });
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function processDataFiles(dataFileArrayBuffer, imageFileArrayBuffer, dataFile) {
+  const workbook = await processData(dataFileArrayBuffer, imageFileArrayBuffer);
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const fileName = dataFile.name.replace(/\.[^/.]+$/, "");
+  createAndDownloadFile(buffer, `${fileName}_report.xlsx`);
+}
 
 function createAndDownloadFile(data, fileName) {
   const blob = new Blob([data], {
@@ -50,4 +61,9 @@ function createAndDownloadFile(data, fileName) {
     tempLink.click();
     document.body.removeChild(tempLink);
   });
+}
+
+function showSpinner(isProcessing) {
+  const processButton = document.getElementById("processButton");
+  processButton.innerHTML = isProcessing ? '<div class="spinner"></div>' : "Создать отчёт";
 }

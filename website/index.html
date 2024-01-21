@@ -9,7 +9,10 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>🤖</text></svg>"
     />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0"
+    />
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"
       integrity="sha512-dlPw+ytv/6JyepmelABrgeYgHI0O+frEwgfnPdXDTOIZz+eDgfW07QXG02/O8COfivBdGNINy+Vex+lYmJ5rxw=="
@@ -23,12 +26,18 @@ https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js
   <body>
     <div class="main-container">
       <header class="header">
-        <h1>🤖</h1>
-        <p>Выбери <img src="./excel.png" style="height: 18pt; margin: 2pt" /> файл 🤓</p>
+        <h1>🤓</h1>
       </header>
       <div class="upload-container">
-        <input type="file" id="fileInput" name="file" accept=".xlsx, .xls" class="upload-input" />
-        <button id="processButton" class="button process-button">Обработать</button>
+        <div class="file-input-container">
+          <p><span class="material-symbols-outlined"> description </span> Данные</p>
+          <input type="file" id="dataFileInput" name="dataFile" accept=".xlsx" class="upload-input" />
+        </div>
+        <div class="file-input-container">
+          <p><span class="material-symbols-outlined"> imagesmode </span> Изображения</p>
+          <input type="file" id="imageFileInput" name="imageFile" accept=".xlsx" class="upload-input" />
+        </div>
+        <button id="processButton" class="button process-button">Создать отчёт</button>
         <button id="downloadLink" class="button download-button" style="display: none">
           <img src="./download.png" />
         </button>
