@@ -122,3 +122,26 @@ body {
     transform: rotate(360deg);
   }
 }
+
+#haresAndKittens {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Ensures click events pass through to underlying elements */
+}
+
+.hare,
+.kitten {
+  position: fixed;
+  width: 70px; /* Adjust size as needed */
+  height: 70px; /* Adjust size as needed */
+  background-size: cover;
+}
+
+.hare {
+  background-image: url("./hare.gif"); /* Path to hare image */
+}
+
+.kitten {
+  background-image: url("./kitten.gif"); /* Path to kitten image */
+}

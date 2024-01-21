@@ -24,6 +24,39 @@ document.addEventListener("DOMContentLoaded", function () {
       showSpinner(false);
     }
   });
+
+  const numAnimals = 1;
+
+  for (let i = 0; i < numAnimals; i++) {
+    const animal = document.createElement("div");
+    animal.className = "kitten";
+    document.body.appendChild(animal); // Append to body for full window movement
+
+    // Starting position
+    let x = Math.random() * (window.innerWidth - 70); // Adjust for animal size
+    let y = Math.random() * (window.innerHeight - 70);
+
+    // Random velocity
+    let velocityX = Math.random() * 0.75; // Speed range -2 to 2
+    let velocityY = Math.random() * 0.75;
+
+    function updatePosition() {
+      // Update position
+      x += velocityX;
+      y += velocityY;
+
+      // Reflect off edges of the window
+      if (x <= 0 || x >= window.innerWidth - 70) velocityX *= -1; // Adjust for animal size
+      if (y <= 0 || y >= window.innerHeight - 70) velocityY *= -1;
+
+      animal.style.left = x + "px";
+      animal.style.top = y + "px";
+
+      requestAnimationFrame(updatePosition);
+    }
+
+    updatePosition();
+  }
 });
 
 function readFileAsArrayBuffer(file) {
@@ -65,5 +98,5 @@ function createAndDownloadFile(data, fileName) {
 
 function showSpinner(isProcessing) {
   const processButton = document.getElementById("processButton");
-  processButton.innerHTML = isProcessing ? '<div class="spinner"></div>' : "Создать отчёт";
+  processButton.innerHTML = isProcessing ? '<div class="spinner"></div>' : '<img src="./happy-cat.gif" />Отчёт готов!';
 }
