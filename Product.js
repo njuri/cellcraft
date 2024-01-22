@@ -14,6 +14,7 @@ class Product {
   retailSoldPercentage; // 11
   currency; // 13
   material; // 14
+  season; // 15
 
   constructor(
     category,
@@ -30,7 +31,8 @@ class Product {
     netSalesSum,
     retailSoldPercentage,
     currency,
-    material
+    material,
+    season
   ) {
     this.category = category;
     this.id = id;
@@ -47,6 +49,7 @@ class Product {
     this.retailSoldPercentage = retailSoldPercentage;
     this.currency = currency;
     this.material = material;
+    this.season = season;
   }
 }
 
