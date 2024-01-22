@@ -36,6 +36,7 @@ class Product {
   retailSoldPercentage; // 11
   currency; // 13
   material; // 14
+  season; // 15
 
   constructor(
     category,
@@ -52,7 +53,8 @@ class Product {
     netSalesSum,
     retailSoldPercentage,
     currency,
-    material
+    material,
+    season
   ) {
     this.category = category;
     this.id = id;
@@ -69,6 +71,7 @@ class Product {
     this.retailSoldPercentage = retailSoldPercentage;
     this.currency = currency;
     this.material = material;
+    this.season = season;
   }
 }
 
@@ -104,7 +107,8 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[8],
         obj[11],
         obj[13],
-        obj[14]
+        obj[14],
+        obj[15]
       )
     );
   }
@@ -279,7 +283,7 @@ const drawDataCells = (headerLocation, product, worksheet) => {
   } else {
     worksheet[cell21] = cellWithValue(retailSoldPercentage);
   }
-  worksheet[cell22] = emptyBorderedCell;
+  worksheet[cell22] = cellWithValue(product.season);
   worksheet[cell23] = emptyBorderedCell;
 
   worksheet[cell30] = cellWithValue("Hind");
@@ -357,7 +361,7 @@ async function readImageWorkbookBuffer(inputBuffer, inputWorkbook, idMap) {
     const id = extractFirstNumber(textCellValue);
     const address = idMap.get(id);
 
-    if (img) {
+    if (img && address) {
       const imageId = inputWorkbook.addImage({
         buffer: img.buffer,
         extension: img.extension,

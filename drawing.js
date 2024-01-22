@@ -152,7 +152,7 @@ const drawDataCells = (headerLocation, product, worksheet) => {
   } else {
     worksheet[cell21] = cellWithValue(retailSoldPercentage);
   }
-  worksheet[cell22] = emptyBorderedCell;
+  worksheet[cell22] = cellWithValue(product.season);
   worksheet[cell23] = emptyBorderedCell;
 
   worksheet[cell30] = cellWithValue("Hind");

@@ -6,7 +6,7 @@ const { mapWorksheetToProducts, groupProducts } = require("./utils");
 const { drawGroups } = require("./drawing");
 const { processWorkseet } = require("./image-processor");
 
-const workbook = XLSX.readFile("res/kk_table.xlsx");
+const workbook = XLSX.readFile("res/kk_table2.xlsx");
 const sheetName = workbook.SheetNames[0];
 const worksheet = workbook.Sheets[sheetName];
 const products = mapWorksheetToProducts(worksheet);
@@ -23,4 +23,4 @@ XLSX.writeFile(newWorkbook, "output/out_no_images.xlsx");
 
 const dataBuf = XLSX.write(newWorkbook, { type: "buffer", bookType: "xlsx" });
 
-processWorkseet(dataBuf, "res/kk_pics.xlsx", headerMap);
+processWorkseet(dataBuf, "res/kk_pics2.xlsx", headerMap);

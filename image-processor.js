@@ -56,7 +56,7 @@ async function readImageWorkbook(filePath, inputWorkbook, idMap) {
     const id = extractFirstNumber(textCellValue);
     const address = idMap.get(id);
 
-    if (img) {
+    if (img && address) {
       const imageId = inputWorkbook.addImage({
         buffer: img.buffer,
         extension: img.extension,
