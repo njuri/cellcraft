@@ -2,7 +2,6 @@ const ExcelJS = require("exceljs");
 
 const processWorkseet = async (dataWorksheetBuffer, imageWorksheet, idMaps) => {
   const dataWorkbook = await readWorkbookBuffer(dataWorksheetBuffer).catch((err) => console.error(err));
-  console.log(idMaps.length);
   await readImageWorkbook(imageWorksheet, dataWorkbook, idMaps);
 
   dataWorkbook.xlsx.writeFile("output/out_with_images.xlsx");

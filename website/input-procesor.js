@@ -3,19 +3,31 @@ export async function processData(dataBuffer, imageBuffer) {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const products = mapWorksheetToProducts(worksheet);
-  const groups = groupProducts(products);
+  const allGroups = groupProductsByCategory(products);
 
   const newWorksheet = XLSX.utils.aoa_to_sheet([]);
   newWorksheet["!ref"] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: products.length * 15, c: 30 });
 
   const cellAddress = { r: 0, c: 1 };
-  const idMap = drawGroups(cellAddress, groups, newWorksheet);
+  const headerMaps = [];
+  headerMaps.push(drawGroups(cellAddress, allGroups, newWorksheet));
 
   const newWorkbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, "Report");
 
+  const groupedByManufacturer = groupProductsByManufacturer(products);
+  for (const group of groupedByManufacturer) {
+    const manufacturerWorksheet = XLSX.utils.aoa_to_sheet([]);
+
+    manufacturerWorksheet["!ref"] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: group.productCount() * 20, c: 16 });
+    const cellAddress = { r: 0, c: 1 };
+
+    headerMaps.push(drawGroups(cellAddress, group.groups, manufacturerWorksheet));
+    XLSX.utils.book_append_sheet(newWorkbook, manufacturerWorksheet, group.manufacturer.substring(0, 30));
+  }
+
   const newBuffer = XLSX.write(newWorkbook, { type: "array", bookType: "xlsx" });
-  const finalWorkbook = await processWorksheet(newBuffer, imageBuffer, idMap);
+  const finalWorkbook = await processWorksheet(newBuffer, imageBuffer, headerMaps);
 
   return finalWorkbook;
 }
@@ -37,6 +49,7 @@ class Product {
   currency; // 13
   material; // 14
   season; // 15
+  manufacturer; // 16
 
   constructor(
     category,
@@ -54,7 +67,8 @@ class Product {
     retailSoldPercentage,
     currency,
     material,
-    season
+    season,
+    manufacturer
   ) {
     this.category = category;
     this.id = id;
@@ -72,6 +86,7 @@ class Product {
     this.currency = currency;
     this.material = material;
     this.season = season;
+    this.manufacturer = manufacturer;
   }
 }
 
@@ -82,6 +97,22 @@ class ProductGroup {
   constructor(category, products) {
     this.category = category;
     this.products = products;
+  }
+}
+
+class ManufacturerProducts {
+  manufacturer;
+  groups;
+
+  constructor(manufacturer, groups) {
+    this.manufacturer = manufacturer;
+    this.groups = groups;
+  }
+
+  productCount() {
+    return this.groups.reduce((totalCount, group) => {
+      return totalCount + group.products.length;
+    }, 0);
   }
 }
 
@@ -108,7 +139,8 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[11],
         obj[13],
         obj[14],
-        obj[15]
+        obj[15],
+        obj[16]
       )
     );
   }
@@ -116,7 +148,7 @@ const mapWorksheetToProducts = (worksheet) => {
   return products;
 };
 
-const groupProducts = (products) => {
+const groupProductsByCategory = (products) => {
   const productMap = products.reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
@@ -128,6 +160,23 @@ const groupProducts = (products) => {
 
   return Object.keys(productMap).map((key) => {
     return new ProductGroup(key, productMap[key]);
+  });
+};
+
+const groupProductsByManufacturer = (products) => {
+  const productMap = products.reduce((acc, product) => {
+    const manufacturerLower = product.manufacturer.toLowerCase();
+
+    if (!acc[manufacturerLower]) {
+      acc[manufacturerLower] = [];
+    }
+
+    acc[manufacturerLower].push(product);
+    return acc;
+  }, {});
+
+  return Object.keys(productMap).map((key) => {
+    return new ManufacturerProducts(key, groupProductsByCategory(productMap[key]));
   });
 };
 
@@ -246,7 +295,7 @@ const drawDataCells = (headerLocation, product, worksheet) => {
   worksheet[cell00] = cellWithValue(product.cost);
   worksheet[cell01] = cellWithValue(product.price);
   worksheet[cell02] = cellWithValue(product.avgPrice);
-  worksheet[cell03] = cellWithValue(product.markup);
+  worksheet[cell03] = cellWithValue(`${product.markup}%`);
 
   worksheet[cell10] = cellWithValue(product.retail);
   worksheet[cell11] = cellWithValue(product.netSalesUnits);
@@ -304,35 +353,35 @@ const cellWithValueAndStyle = (value, style) => {
   return { v: value, s: style };
 };
 
-const processWorksheet = async (dataWorksheetBuffer, imageWorksheetBuffer, idMap) => {
+const processWorksheet = async (dataWorksheetBuffer, imageWorksheetBuffer, idMaps) => {
   const dataWorkbook = await readWorkbookBuffer(dataWorksheetBuffer).catch((err) => console.error(err));
 
-  await readImageWorkbookBuffer(imageWorksheetBuffer, dataWorkbook, idMap);
+  await readImageWorkbookBuffer(imageWorksheetBuffer, dataWorkbook, idMaps);
   return dataWorkbook;
 };
 
 async function readWorkbookBuffer(buffer) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
-
-  const worksheet = workbook.worksheets[0];
-
   const outWorkbook = new ExcelJS.Workbook();
-  const outWorksheet = outWorkbook.addWorksheet("Report");
 
-  // Copy cells and styles
-  worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-    row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
-      const newCell = outWorksheet.getRow(rowNumber).getCell(colNumber);
-      newCell.value = cell.value;
-      newCell.style = cell.style;
+  for (const worksheet of workbook.worksheets) {
+    const outWorksheet = outWorkbook.addWorksheet(worksheet.name);
+
+    // Copy cells and styles
+    worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+      row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+        const newCell = outWorksheet.getRow(rowNumber).getCell(colNumber);
+        newCell.value = cell.value;
+        newCell.style = cell.style;
+      });
     });
-  });
 
-  // Copy merged cells
-  worksheet.model.merges.forEach((merge) => {
-    outWorksheet.mergeCells(merge);
-  });
+    // Copy merged cells
+    worksheet.model.merges.forEach((merge) => {
+      outWorksheet.mergeCells(merge);
+    });
+  }
 
   return outWorkbook;
 }
@@ -346,31 +395,32 @@ function extractFirstNumber(str) {
   return result ? parseInt(result[0], 10) : null;
 }
 
-async function readImageWorkbookBuffer(inputBuffer, inputWorkbook, idMap) {
+async function readImageWorkbookBuffer(inputBuffer, inputWorkbook, idMaps) {
   const imagesWorkbook = new ExcelJS.Workbook();
   await imagesWorkbook.xlsx.load(inputBuffer);
   const imagesWorksheet = imagesWorkbook.worksheets[0];
-  const inputWorksheet = inputWorkbook.worksheets[0];
 
-  for (const image of imagesWorksheet.getImages()) {
-    const img = imagesWorkbook.model.media.find((m) => m.index === image.imageId);
+  for (const [i, inputWorksheet] of inputWorkbook.worksheets.entries()) {
+    for (const image of imagesWorksheet.getImages()) {
+      const img = imagesWorkbook.model.media.find((m) => m.index === image.imageId);
 
-    const imageRow = image.range.tl.nativeRow;
-    const imageCol = image.range.tl.nativeCol;
-    const textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
-    const id = extractFirstNumber(textCellValue);
-    const address = idMap.get(id);
+      const imageRow = image.range.tl.nativeRow;
+      const imageCol = image.range.tl.nativeCol;
+      const textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
+      const id = extractFirstNumber(textCellValue);
+      const address = idMaps[i].get(id);
 
-    if (img && address) {
-      const imageId = inputWorkbook.addImage({
-        buffer: img.buffer,
-        extension: img.extension,
-      });
+      if (img && address) {
+        const imageId = inputWorkbook.addImage({
+          buffer: img.buffer,
+          extension: img.extension,
+        });
 
-      inputWorksheet.addImage(imageId, {
-        tl: { col: address.c, row: address.r - 1 },
-        br: { col: address.c + 4, row: address.r + 9 },
-      });
+        inputWorksheet.addImage(imageId, {
+          tl: { col: address.c, row: address.r - 1 },
+          br: { col: address.c + 4, row: address.r + 9 },
+        });
+      }
     }
   }
 }
