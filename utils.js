@@ -1,5 +1,5 @@
 const XLSX = require("xlsx-js-style");
-const { Product, ProductGroup } = require("./Product.js");
+const { Product, ProductGroup, ManufacturerProducts } = require("./Product.js");
 
 const mapWorksheetToProducts = (worksheet) => {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 1, blankrows: false });
@@ -25,7 +25,8 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[11],
         obj[13],
         obj[14],
-        obj[15]
+        obj[15],
+        obj[16]
       )
     );
   }
@@ -33,7 +34,7 @@ const mapWorksheetToProducts = (worksheet) => {
   return products;
 };
 
-const groupProducts = (products) => {
+const groupProductsByCategory = (products) => {
   const productMap = products.reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
@@ -48,4 +49,21 @@ const groupProducts = (products) => {
   });
 };
 
-module.exports = { mapWorksheetToProducts, groupProducts };
+const groupProductsByManufacturer = (products) => {
+  const productMap = products.reduce((acc, product) => {
+    const manufacturerLower = product.manufacturer.toLowerCase();
+
+    if (!acc[manufacturerLower]) {
+      acc[manufacturerLower] = [];
+    }
+
+    acc[manufacturerLower].push(product);
+    return acc;
+  }, {});
+
+  return Object.keys(productMap).map((key) => {
+    return new ManufacturerProducts(key, groupProductsByCategory(productMap[key]));
+  });
+};
+
+module.exports = { mapWorksheetToProducts, groupProductsByCategory, groupProductsByManufacturer };

@@ -115,7 +115,7 @@ const drawDataCells = (headerLocation, product, worksheet) => {
   worksheet[cell00] = cellWithValue(product.cost);
   worksheet[cell01] = cellWithValue(product.price);
   worksheet[cell02] = cellWithValue(product.avgPrice);
-  worksheet[cell03] = cellWithValue(product.markup);
+  worksheet[cell03] = cellWithValue(`${product.markup}%`);
 
   worksheet[cell10] = cellWithValue(product.retail);
   worksheet[cell11] = cellWithValue(product.netSalesUnits);

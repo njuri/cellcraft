@@ -15,6 +15,7 @@ class Product {
   currency; // 13
   material; // 14
   season; // 15
+  manufacturer; // 16
 
   constructor(
     category,
@@ -32,7 +33,8 @@ class Product {
     retailSoldPercentage,
     currency,
     material,
-    season
+    season,
+    manufacturer
   ) {
     this.category = category;
     this.id = id;
@@ -50,6 +52,7 @@ class Product {
     this.currency = currency;
     this.material = material;
     this.season = season;
+    this.manufacturer = manufacturer;
   }
 }
 
@@ -63,4 +66,20 @@ class ProductGroup {
   }
 }
 
-module.exports = { Product, ProductGroup };
+class ManufacturerProducts {
+  manufacturer;
+  groups;
+
+  constructor(manufacturer, groups) {
+    this.manufacturer = manufacturer;
+    this.groups = groups;
+  }
+
+  productCount() {
+    return this.groups.reduce((totalCount, group) => {
+      return totalCount + group.products.length;
+    }, 0);
+  }
+}
+
+module.exports = { Product, ProductGroup, ManufacturerProducts };
