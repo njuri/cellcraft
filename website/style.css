@@ -133,10 +133,18 @@ body {
 .kitten {
   position: fixed;
   width: 70px; /* Adjust size as needed */
-  height: 70px; /* Adjust size as needed */
+  height: 111px; /* Adjust size as needed */
   background-size: cover;
 }
 
 .kitten {
   background-image: url("./kitten.gif"); /* Path to kitten image */
+}
+
+.mish {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  width: 70px;
 }
