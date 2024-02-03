@@ -82,4 +82,20 @@ class ManufacturerProducts {
   }
 }
 
-module.exports = { Product, ProductGroup, ManufacturerProducts };
+class SeasonProducts {
+  season;
+  groups;
+
+  constructor(season, groups) {
+    this.season = season;
+    this.groups = groups;
+  }
+
+  productCount() {
+    return this.groups.reduce((totalCount, group) => {
+      return totalCount + group.products.length;
+    }, 0);
+  }
+}
+
+module.exports = { Product, ProductGroup, ManufacturerProducts, SeasonProducts };

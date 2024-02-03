@@ -406,7 +406,13 @@ async function readImageWorkbookBuffer(inputBuffer, inputWorkbook, idMaps) {
 
       const imageRow = image.range.tl.nativeRow;
       const imageCol = image.range.tl.nativeCol;
-      const textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
+      let textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
+
+      if (!textCellValue) {
+        textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol + 1).value;
+        console.log(`Incorrect column: ${textCellValue}`);
+      }
+
       const id = extractFirstNumber(textCellValue);
       const address = idMaps[i].get(id);
 
