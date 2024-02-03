@@ -26,6 +26,21 @@ export async function processData(dataBuffer, imageBuffer) {
     XLSX.utils.book_append_sheet(newWorkbook, manufacturerWorksheet, group.manufacturer.substring(0, 30));
   }
 
+  const groupedBySeason = groupProductsBySeason(products);
+  for (const group of groupedBySeason) {
+    const seasonWorksheet = XLSX.utils.aoa_to_sheet([]);
+
+    seasonWorksheet["!ref"] = XLSX.utils.encode_range({ r: 0, c: 0 }, { r: group.productCount() * 20, c: 16 });
+    const cellAddress = { r: 0, c: 1 };
+
+    headerMaps.push(drawGroups(cellAddress, group.groups, seasonWorksheet));
+    XLSX.utils.book_append_sheet(
+      newWorkbook,
+      seasonWorksheet,
+      group.season.substring(0, 30).replace(/[\\\/\?\*\[\]]/g, "")
+    );
+  }
+
   const newBuffer = XLSX.write(newWorkbook, { type: "array", bookType: "xlsx" });
   const finalWorkbook = await processWorksheet(newBuffer, imageBuffer, headerMaps);
 
@@ -116,6 +131,22 @@ class ManufacturerProducts {
   }
 }
 
+class SeasonProducts {
+  season;
+  groups;
+
+  constructor(season, groups) {
+    this.season = season;
+    this.groups = groups;
+  }
+
+  productCount() {
+    return this.groups.reduce((totalCount, group) => {
+      return totalCount + group.products.length;
+    }, 0);
+  }
+}
+
 const mapWorksheetToProducts = (worksheet) => {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 1, blankrows: false });
 
@@ -177,6 +208,23 @@ const groupProductsByManufacturer = (products) => {
 
   return Object.keys(productMap).map((key) => {
     return new ManufacturerProducts(key, groupProductsByCategory(productMap[key]));
+  });
+};
+
+const groupProductsBySeason = (products) => {
+  const productMap = products.reduce((acc, product) => {
+    const seasonLower = product.season.toLowerCase();
+
+    if (!acc[seasonLower]) {
+      acc[seasonLower] = [];
+    }
+
+    acc[seasonLower].push(product);
+    return acc;
+  }, {});
+
+  return Object.keys(productMap).map((key) => {
+    return new SeasonProducts(key, groupProductsByCategory(productMap[key]));
   });
 };
 
