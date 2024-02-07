@@ -72,10 +72,7 @@ const groupProductsByManufacturer = (products) => {
   }, {});
 
   return Object.keys(productMap).map((key) => {
-    return new ManufacturerProducts(
-      key,
-      groupProductsByCategory(productMap[key]),
-    );
+    return new ManufacturerProducts(key, groupProductsByCategory(productMap[key]));
   });
 };
 
@@ -109,10 +106,24 @@ const groupOrderProductsBySection = (products) => {
   }, {});
 
   return Object.keys(productMap).map((key) => {
-    return new OrderProductSection(
-      key,
-      groupProductsByCategory(productMap[key]),
-    );
+    return new OrderProductSection(key, groupProductsByCategoryCaseInsensitive(productMap[key]));
+  });
+};
+
+const groupProductsByCategoryCaseInsensitive = (products) => {
+  const productMap = products.reduce((acc, product) => {
+    const category = product.category.toLowerCase();
+
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+
+    acc[category].push(product);
+    return acc;
+  }, {});
+
+  return Object.keys(productMap).map((key) => {
+    return new ProductGroup(key, productMap[key]);
   });
 };
 
