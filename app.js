@@ -52,13 +52,6 @@ async function readExcelFile(filePath) {
   const outWorksheet = outWorkbook.addWorksheet("Result");
 
   const sections = groupOrderProductsBySection(products);
-  for (const section of sections) {
-    for (const group of section.groups) {
-      for (const product of group.products) {
-        // console.log(product.artEE(), product.artLV());
-      }
-    }
-  }
 
   drawTable({ r: 5, c: 1 }, sections, outWorksheet);
 
@@ -144,11 +137,7 @@ const drawTable = (location, sections, worksheet) => {
     drawHeader(sectionLocation, worksheet);
     offset += section.groups.length + 4;
     for (const [index, group] of section.groups.entries()) {
-      drawOrderGroup(
-        { r: sectionLocation.r + 2 + index, c: sectionLocation.c },
-        group,
-        worksheet,
-      );
+      drawOrderGroup({ r: sectionLocation.r + 2 + index, c: sectionLocation.c }, group, worksheet);
     }
     drawTotalRows(
       {
@@ -176,22 +165,64 @@ const drawHeadings = (location, worksheet) => {
   worksheet.getCell(location.r, location.c + 6).value = "LT";
 };
 
+const boldTextStyle = { font: { bold: true } };
+const allBordersStyle = {
+  border: {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
+  },
+};
+
+const yellowFill = {
+  fill: {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFF00" },
+  },
+};
+
 const drawHeader = (location, worksheet) => {
-  // console.log(`DRAWING AT ${location.r}`);
   const art = "Арт в AW24";
   const order = "AW24 Заказ";
 
   worksheet.getCell(location.r + 1, location.c).value = "Вид обуви";
+  worksheet.getCell(location.r + 1, location.c).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c).border = allBordersStyle;
+
   worksheet.getCell(location.r + 1, location.c + 1).value = order;
+  worksheet.getCell(location.r + 1, location.c + 1).style = {
+    ...boldTextStyle,
+    ...allBordersStyle,
+  };
+
   worksheet.getCell(location.r + 1, location.c + 2).value = art;
+  worksheet.getCell(location.r + 1, location.c + 2).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c + 2).border = allBordersStyle;
+
   worksheet.getCell(location.r + 1, location.c + 3).value = order;
+  worksheet.getCell(location.r + 1, location.c + 3).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c + 3).border = allBordersStyle;
+
   worksheet.getCell(location.r + 1, location.c + 4).value = art;
+  worksheet.getCell(location.r + 1, location.c + 4).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c + 4).border = allBordersStyle;
+
   worksheet.getCell(location.r + 1, location.c + 5).value = order;
+  worksheet.getCell(location.r + 1, location.c + 5).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c + 5).border = allBordersStyle;
+
   worksheet.getCell(location.r + 1, location.c + 6).value = art;
+  worksheet.getCell(location.r + 1, location.c + 6).style = boldTextStyle;
+  worksheet.getCell(location.r + 1, location.c + 6).border = allBordersStyle;
 };
 
 const drawOrderGroup = (location, group, worksheet) => {
   worksheet.getCell(location.r, location.c).value = group.category;
+  const config = new CellConfig(group.category, { ...allBordersStyle, ...boldTextStyle });
+  updateCell(location.r, location.c, worksheet, config);
+
   worksheet.getCell(location.r, location.c + 1).value = group.sumEE();
   worksheet.getCell(location.r, location.c + 2).value = group.artEE();
   worksheet.getCell(location.r, location.c + 3).value = group.sumLV();
@@ -214,13 +245,50 @@ const drawTotalRows = (
   worksheet.getCell(location.r, location.c).value = "Oсень";
   worksheet.getCell(location.r + 1, location.c).value = "Зима";
 
-  // console.log(artTotalEE, artTotalLV);
-
   worksheet.getCell(location.r + 2, location.c).value = `Итого ${name}`;
-  worksheet.getCell(location.r + 2, location.c + 1).value = orderTotalEE;
+  const config = new CellConfig(`Итого ${name}`, {
+    ...boldTextStyle,
+    ...yellowFill,
+  });
+  updateCell(location.r + 2, location.c, worksheet, config);
+
+  const config2 = new CellConfig(orderTotalEE, {
+    ...boldTextStyle,
+    ...yellowFill,
+  });
+  updateCell(location.r + 2, location.c + 1, worksheet, config2);
+
   worksheet.getCell(location.r + 2, location.c + 2).value = artTotalEE;
+  worksheet.getCell(location.r + 2, location.c + 2).style = boldTextStyle;
+
   worksheet.getCell(location.r + 2, location.c + 3).value = orderTotalLV;
+  worksheet.getCell(location.r + 2, location.c + 3).style = boldTextStyle;
+
   worksheet.getCell(location.r + 2, location.c + 4).value = artTotalLV;
+  worksheet.getCell(location.r + 2, location.c + 4).style = boldTextStyle;
+
   worksheet.getCell(location.r + 2, location.c + 5).value = orderTotalLT;
+  worksheet.getCell(location.r + 2, location.c + 5).style = boldTextStyle;
+
   worksheet.getCell(location.r + 2, location.c + 6).value = artTotalLT;
+  worksheet.getCell(location.r + 2, location.c + 6).style = boldTextStyle;
+};
+
+class CellConfig {
+  value;
+  style;
+
+  constructor(value, style) {
+    this.value = value;
+    this.style = style;
+  }
+}
+
+const updateCell = (r, c, worksheet, config) => {
+  worksheet.getCell(r, c).value = config.value;
+
+  worksheet.getCell(r, c).style = {
+    ...(worksheet.getCell(r, c).style || {}),
+    ...config.style,
+  };
 };
