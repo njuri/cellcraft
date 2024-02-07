@@ -98,9 +98,213 @@ class SeasonProducts {
   }
 }
 
+class OrderProductSection {
+  name;
+  groups;
+
+  constructor(name, groups) {
+    this.name = name;
+    this.groups = groups;
+    console.log(groups[4].sumEE());
+  }
+
+  artTotalEE() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.artEE === "function") {
+        return sum + group.artEE();
+      }
+      return sum;
+    }, 0);
+  }
+
+  artTotalLV() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.artLV === "function") {
+        return sum + group.artLV();
+      }
+      return sum;
+    }, 0);
+  }
+
+  artTotalLT() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.artLT === "function") {
+        return sum + group.artLT();
+      }
+      return sum;
+    }, 0);
+  }
+
+  orderTotalEE() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.sumEE === "function") {
+        return sum + group.sumEE();
+      }
+      return sum;
+    }, 0);
+  }
+
+  orderTotalLV() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.sumLV === "function") {
+        return sum + group.sumLV();
+      }
+      return sum;
+    }, 0);
+  }
+
+  orderTotalLT() {
+    return this.groups.reduce((sum, group) => {
+      if (typeof group.sumLT === "function") {
+        return sum + group.sumLT();
+      }
+      return sum;
+    }, 0);
+  }
+}
+
+class OrderProduct {
+  manufacturer;
+  currency; // f
+  category; // j
+  sex; // k
+  inBoxAmount; // v
+  price; // x
+  amountEE; // r
+  amountLV; // s
+  amountLT; // t
+
+  constructor(
+    manufacturer,
+    currency,
+    category,
+    sex,
+    inBoxAmount,
+    price,
+    amountEE,
+    amountLV,
+    amountLT,
+  ) {
+    this.manufacturer = manufacturer;
+    this.category = category;
+    this.currency = currency;
+    this.sex = sex;
+    this.inBoxAmount = inBoxAmount;
+    this.price = price;
+    this.amountEE = amountEE;
+    this.amountLV = amountLV;
+    this.amountLT = amountLT;
+  }
+
+  artEE() {
+    return this.amountEE > 0 ? 1 : 0;
+  }
+
+  artLV() {
+    return this.amountLV > 0 ? 1 : 0;
+  }
+
+  artLT() {
+    return this.amountLT > 0 ? 1 : 0;
+  }
+
+  priceEur() {
+    const usdCurrency = "USD";
+    const rmbCurrency = "RMB";
+
+    function usdToEur(usd) {
+      return usd / 1;
+    }
+
+    function rmbToEur(rmb) {
+      return rmb / 7.5;
+    }
+
+    if (this.currency === usdCurrency) {
+      return usdToEur(this.price);
+    }
+    if (this.currency === rmbCurrency) {
+      return rmbToEur(this.price);
+    }
+  }
+
+  sumEE() {
+    return this.sumEur(this.amountEE);
+  }
+
+  sumLV() {
+    return this.sumEur(this.amountLV);
+  }
+
+  sumLT() {
+    return this.sumEur(this.amountLT);
+  }
+
+  sumEur(amount) {
+    const effectiveAmount = amount ?? 0;
+    return this.inBoxAmount * effectiveAmount * this.priceEur();
+  }
+}
+
+ProductGroup.prototype.artEE = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.artEE === "function") {
+      return sum + product.artEE();
+    }
+    return sum;
+  }, 0);
+};
+
+ProductGroup.prototype.artLV = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.artLV === "function") {
+      return sum + product.artLV();
+    }
+    return sum;
+  }, 0);
+};
+
+ProductGroup.prototype.artLT = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.artLT === "function") {
+      return sum + product.artLT();
+    }
+    return sum;
+  }, 0);
+};
+
+ProductGroup.prototype.sumEE = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.sumEE === "function") {
+      return sum + product.sumEE();
+    }
+    return sum;
+  }, 0);
+};
+
+ProductGroup.prototype.sumLV = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.sumLV === "function") {
+      return sum + product.sumLV();
+    }
+    return sum;
+  }, 0);
+};
+
+ProductGroup.prototype.sumLT = function () {
+  return this.products.reduce((sum, product) => {
+    if (typeof product.sumLT === "function") {
+      return sum + product.sumLT();
+    }
+    return sum;
+  }, 0);
+};
+
 module.exports = {
   Product,
   ProductGroup,
   ManufacturerProducts,
   SeasonProducts,
+  OrderProduct,
+  OrderProductSection,
 };

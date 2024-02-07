@@ -4,6 +4,7 @@ const {
   ProductGroup,
   ManufacturerProducts,
   SeasonProducts,
+  OrderProductSection,
 } = require("./Product.js");
 
 const mapWorksheetToProducts = (worksheet) => {
@@ -95,9 +96,30 @@ const groupProductsBySeason = (products) => {
   });
 };
 
+const groupOrderProductsBySection = (products) => {
+  const productMap = products.reduce((acc, product) => {
+    const section = product.sex.toLowerCase();
+
+    if (!acc[section]) {
+      acc[section] = [];
+    }
+
+    acc[section].push(product);
+    return acc;
+  }, {});
+
+  return Object.keys(productMap).map((key) => {
+    return new OrderProductSection(
+      key,
+      groupProductsByCategory(productMap[key]),
+    );
+  });
+};
+
 module.exports = {
   mapWorksheetToProducts,
   groupProductsByCategory,
   groupProductsByManufacturer,
   groupProductsBySeason,
+  groupOrderProductsBySection,
 };
