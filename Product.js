@@ -34,7 +34,7 @@ class Product {
     currency,
     material,
     season,
-    manufacturer
+    manufacturer,
   ) {
     this.category = category;
     this.id = id;
@@ -98,4 +98,9 @@ class SeasonProducts {
   }
 }
 
-module.exports = { Product, ProductGroup, ManufacturerProducts, SeasonProducts };
+module.exports = {
+  Product,
+  ProductGroup,
+  ManufacturerProducts,
+  SeasonProducts,
+};

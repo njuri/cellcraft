@@ -1,29 +1,35 @@
 import { processData } from "./input-procesor.js";
 
-document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("processButton").addEventListener("click", async function () {
-    const dataFileInput = document.getElementById("dataFileInput");
-    const imageFileInput = document.getElementById("imageFileInput");
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("processButton")
+    .addEventListener("click", async () => {
+      const dataFileInput = document.getElementById("dataFileInput");
+      const imageFileInput = document.getElementById("imageFileInput");
 
-    const dataFile = dataFileInput.files[0];
-    const imageFile = imageFileInput.files[0];
+      const dataFile = dataFileInput.files[0];
+      const imageFile = imageFileInput.files[0];
 
-    if (!dataFile || !imageFile) {
-      console.error("Both files must be selected");
-      return;
-    }
+      if (!dataFile || !imageFile) {
+        console.error("Both files must be selected");
+        return;
+      }
 
-    const dataFileArrayBuffer = await readFileAsArrayBuffer(dataFile);
-    const imageFileArrayBuffer = await readFileAsArrayBuffer(imageFile);
+      const dataFileArrayBuffer = await readFileAsArrayBuffer(dataFile);
+      const imageFileArrayBuffer = await readFileAsArrayBuffer(imageFile);
 
-    showSpinner(true);
+      showSpinner(true);
 
-    try {
-      await processDataFiles(dataFileArrayBuffer, imageFileArrayBuffer, dataFile);
-    } finally {
-      showSpinner(false);
-    }
-  });
+      try {
+        await processDataFiles(
+          dataFileArrayBuffer,
+          imageFileArrayBuffer,
+          dataFile,
+        );
+      } finally {
+        showSpinner(false);
+      }
+    });
 
   const numAnimals = 1;
 
@@ -49,8 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (x <= 0 || x >= window.innerWidth - 70) velocityX *= -1; // Adjust for animal size
       if (y <= 0 || y >= window.innerHeight - 70) velocityY *= -1;
 
-      animal.style.left = x + "px";
-      animal.style.top = y + "px";
+      animal.style.left = `${x}px`;
+      animal.style.top = `${y}px`;
 
       requestAnimationFrame(updatePosition);
     }
@@ -68,7 +74,11 @@ function readFileAsArrayBuffer(file) {
   });
 }
 
-async function processDataFiles(dataFileArrayBuffer, imageFileArrayBuffer, dataFile) {
+async function processDataFiles(
+  dataFileArrayBuffer,
+  imageFileArrayBuffer,
+  dataFile,
+) {
   const workbook = await processData(dataFileArrayBuffer, imageFileArrayBuffer);
   const buffer = await workbook.xlsx.writeBuffer();
 
@@ -85,7 +95,7 @@ function createAndDownloadFile(data, fileName) {
   const downloadLink = document.getElementById("downloadLink");
   downloadLink.style.display = "block";
 
-  downloadLink.addEventListener("click", function () {
+  downloadLink.addEventListener("click", () => {
     const tempLink = document.createElement("a");
     tempLink.href = url;
     tempLink.download = fileName;
@@ -98,5 +108,7 @@ function createAndDownloadFile(data, fileName) {
 
 function showSpinner(isProcessing) {
   const processButton = document.getElementById("processButton");
-  processButton.innerHTML = isProcessing ? '<div class="spinner"></div>' : '<img src="./happy-cat.gif" />Отчёт готов!';
+  processButton.innerHTML = isProcessing
+    ? '<div class="spinner"></div>'
+    : '<img src="./happy-cat.gif" />Отчёт готов!';
 }

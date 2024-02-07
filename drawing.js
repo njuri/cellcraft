@@ -48,11 +48,14 @@ const drawGroup = (location, group, worksheet, map) => {
   };
 
   for (let i = 0; i < group.products.length; i += 3) {
-    let subGroup = group.products.slice(i, i + 3);
-    let subGroupIndex = i / 3;
+    const subGroup = group.products.slice(i, i + 3);
+    const subGroupIndex = i / 3;
 
     for (let j = 0; j < subGroup.length; j++) {
-      const loc = { r: location.r + 2 + subGroupIndex * 17, c: location.c + j * 5 };
+      const loc = {
+        r: location.r + 2 + subGroupIndex * 17,
+        c: location.c + j * 5,
+      };
       drawTable(loc, subGroup[j], worksheet);
       map.set(subGroup[j].id, { r: loc.r + 1, c: loc.c });
     }
@@ -85,10 +88,19 @@ const drawHeader = (location, productName, worksheet) => {
     s: allBordersStyleCentered,
   };
 
-  worksheet[XLSX.utils.encode_cell({ r: headerLocation.r + 1, c: headerLocation.c })] = emptyBorderedCell;
+  worksheet[
+    XLSX.utils.encode_cell({ r: headerLocation.r + 1, c: headerLocation.c })
+  ] = emptyBorderedCell;
   for (let i = 1; i < 4; i++) {
-    worksheet[XLSX.utils.encode_cell({ r: headerLocation.r, c: headerLocation.c + i })] = emptyBorderedCell;
-    worksheet[XLSX.utils.encode_cell({ r: headerLocation.r + 1, c: headerLocation.c + i })] = emptyBorderedCell;
+    worksheet[
+      XLSX.utils.encode_cell({ r: headerLocation.r, c: headerLocation.c + i })
+    ] = emptyBorderedCell;
+    worksheet[
+      XLSX.utils.encode_cell({
+        r: headerLocation.r + 1,
+        c: headerLocation.c + i,
+      })
+    ] = emptyBorderedCell;
   }
 };
 

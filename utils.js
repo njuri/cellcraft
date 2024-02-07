@@ -1,10 +1,19 @@
 const XLSX = require("xlsx-js-style");
-const { Product, ProductGroup, ManufacturerProducts, SeasonProducts } = require("./Product.js");
+const {
+  Product,
+  ProductGroup,
+  ManufacturerProducts,
+  SeasonProducts,
+} = require("./Product.js");
 
 const mapWorksheetToProducts = (worksheet) => {
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 1, blankrows: false });
+  const data = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    range: 1,
+    blankrows: false,
+  });
 
-  let products = [];
+  const products = [];
   for (let i = 0, size = data.length; i < size; i++) {
     const obj = data[i];
 
@@ -26,8 +35,8 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[13],
         obj[14],
         obj[15],
-        obj[16]
-      )
+        obj[16],
+      ),
     );
   }
 
@@ -62,7 +71,10 @@ const groupProductsByManufacturer = (products) => {
   }, {});
 
   return Object.keys(productMap).map((key) => {
-    return new ManufacturerProducts(key, groupProductsByCategory(productMap[key]));
+    return new ManufacturerProducts(
+      key,
+      groupProductsByCategory(productMap[key]),
+    );
   });
 };
 

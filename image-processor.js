@@ -1,7 +1,9 @@
 const ExcelJS = require("exceljs");
 
 const processWorkseet = async (dataWorksheetBuffer, imageWorksheet, idMaps) => {
-  const dataWorkbook = await readWorkbookBuffer(dataWorksheetBuffer).catch((err) => console.error(err));
+  const dataWorkbook = await readWorkbookBuffer(dataWorksheetBuffer).catch(
+    (err) => console.error(err),
+  );
   await readImageWorkbook(imageWorksheet, dataWorkbook, idMaps);
 
   dataWorkbook.xlsx.writeFile("output/out_with_images.xlsx");
@@ -16,8 +18,8 @@ async function readWorkbookBuffer(buffer) {
     const outWorksheet = outWorkbook.addWorksheet(worksheet.name);
 
     // Copy cells and styles
-    worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-      row.eachCell({ includeEmpty: true }, function (cell, colNumber) {
+    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         const newCell = outWorksheet.getRow(rowNumber).getCell(colNumber);
         newCell.value = cell.value;
         newCell.style = cell.style;
@@ -25,9 +27,9 @@ async function readWorkbookBuffer(buffer) {
     });
 
     // Copy merged cells
-    worksheet.model.merges.forEach((merge) => {
+    for (const merge of worksheet.model.merges) {
       outWorksheet.mergeCells(merge);
-    });
+    }
   }
 
   return outWorkbook;
@@ -49,14 +51,24 @@ async function readImageWorkbook(filePath, inputWorkbook, idMaps) {
 
   for (const [i, inputWorksheet] of inputWorkbook.worksheets.entries()) {
     for (const image of imagesWorksheet.getImages()) {
-      const img = imagesWorkbook.model.media.find((m) => m.index === image.imageId);
+      const img = imagesWorkbook.model.media.find(
+        (m) => m.index === image.imageId,
+      );
 
       const imageRow = image.range.tl.nativeRow;
       const imageCol = image.range.tl.nativeCol;
-      let textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol).value;
+      let textCellValue = getCellAtIndex(
+        imagesWorksheet,
+        imageRow + 1,
+        imageCol,
+      ).value;
 
       if (!textCellValue) {
-        textCellValue = getCellAtIndex(imagesWorksheet, imageRow + 1, imageCol + 1).value;
+        textCellValue = getCellAtIndex(
+          imagesWorksheet,
+          imageRow + 1,
+          imageCol + 1,
+        ).value;
         console.log(`Incorrect column: ${textCellValue}`);
       }
 
