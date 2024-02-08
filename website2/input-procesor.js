@@ -1,24 +1,24 @@
 export async function processData(dataBuffer) {
   const workbook = await readWorkbookBuffer(dataBuffer).catch((err) => console.error(err));
 
-  const startSuffix = " START";
-  const endSuffix = " END";
+  const startSuffix = "START";
+  const endSuffix = "END";
   const products = [];
 
   workbook.eachSheet((worksheet, id) => {
-    let manufacturer = "";
+    let shouldStartReading = false;
     let shouldStopReading = false;
     worksheet.eachRow((row, rowNumber) => {
       if (!shouldStopReading) {
-        const headerCell = row.values[1];
+        const headerCell = row.values[1]?.toString();
         if (headerCell?.endsWith(startSuffix)) {
-          manufacturer = headerCell.slice(0, -startSuffix.length);
+          shouldStartReading = true;
         } else if (headerCell?.endsWith(endSuffix)) {
           shouldStopReading = true;
         }
-        if (manufacturer) {
+
+        if (shouldStartReading) {
           const product = new OrderProduct(
-            manufacturer,
             row.values[6],
             row.values[10],
             row.values[11],
@@ -33,6 +33,8 @@ export async function processData(dataBuffer) {
       }
     });
   });
+
+  console.log(products.length);
 
   const outWorkbook = new ExcelJS.Workbook();
   const outWorksheet = outWorkbook.addWorksheet("Result");
@@ -235,62 +237,16 @@ const updateCell = (r, c, worksheet, config) => {
   };
 };
 
-class Product {
-  category; // 0
-  id; // 1
-  name; // 2
-  purchasePrice; // 3
-  cost; // 4
-  retail; // 5
-  price; // 6
-  avgPrice; // 9
-  markup; // 10
-  netSalesUnits; // 7
-  finalBalance; // 12
-  netSalesSum; // 8
-  retailSoldPercentage; // 11
-  currency; // 13
-  material; // 14
-  season; // 15
-  manufacturer; // 16
-
-  constructor(
-    category,
-    id,
-    name,
-    purchasePrice,
-    cost,
-    retail,
-    price,
-    avgPrice,
-    markup,
-    netSalesUnits,
-    finalBalance,
-    netSalesSum,
-    retailSoldPercentage,
-    currency,
-    material,
-    season,
-    manufacturer,
-  ) {
-    this.category = category;
-    this.id = id;
-    this.name = name;
-    this.purchasePrice = purchasePrice;
-    this.cost = cost;
-    this.retail = retail;
-    this.price = price;
-    this.avgPrice = avgPrice.toFixed(2);
-    this.markup = markup;
-    this.netSalesUnits = netSalesUnits;
-    this.finalBalance = finalBalance;
-    this.netSalesSum = netSalesSum;
-    this.retailSoldPercentage = retailSoldPercentage;
-    this.currency = currency;
-    this.material = material;
-    this.season = season;
-    this.manufacturer = manufacturer;
+function ensureString(variable) {
+  if (typeof variable === "object") {
+    const result = variable.richText.reduce((acc, item) => acc + (item.text || ""), "");
+    console.log(result);
+    return result;
   }
+  if (typeof variable === "string") {
+    return variable;
+  }
+  return "";
 }
 
 class ProductGroup {
@@ -300,38 +256,6 @@ class ProductGroup {
   constructor(category, products) {
     this.category = category;
     this.products = products;
-  }
-}
-
-class ManufacturerProducts {
-  manufacturer;
-  groups;
-
-  constructor(manufacturer, groups) {
-    this.manufacturer = manufacturer;
-    this.groups = groups;
-  }
-
-  productCount() {
-    return this.groups.reduce((totalCount, group) => {
-      return totalCount + group.products.length;
-    }, 0);
-  }
-}
-
-class SeasonProducts {
-  season;
-  groups;
-
-  constructor(season, groups) {
-    this.season = season;
-    this.groups = groups;
-  }
-
-  productCount() {
-    return this.groups.reduce((totalCount, group) => {
-      return totalCount + group.products.length;
-    }, 0);
   }
 }
 
@@ -400,7 +324,6 @@ class OrderProductSection {
 }
 
 class OrderProduct {
-  manufacturer;
   currency; // f
   category; // j
   sex; // k
@@ -410,19 +333,8 @@ class OrderProduct {
   amountLV; // s
   amountLT; // t
 
-  constructor(
-    manufacturer,
-    currency,
-    category,
-    sex,
-    inBoxAmount,
-    price,
-    amountEE,
-    amountLV,
-    amountLT,
-  ) {
-    this.manufacturer = manufacturer;
-    this.category = category;
+  constructor(currency, category, sex, inBoxAmount, price, amountEE, amountLV, amountLT) {
+    this.category = ensureString(category);
     this.currency = currency;
     this.sex = sex;
     this.inBoxAmount = inBoxAmount;
