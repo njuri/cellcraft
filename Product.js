@@ -105,7 +105,6 @@ class OrderProductSection {
   constructor(name, groups) {
     this.name = name;
     this.groups = groups;
-    console.log(groups[4].sumEE());
   }
 
   artTotalEE() {
