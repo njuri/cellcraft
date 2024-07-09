@@ -87,6 +87,7 @@ class Product {
   material; // 14
   season; // 15
   manufacturer; // 16
+  receiptDate; // 17
 
   constructor(
     category,
@@ -106,6 +107,7 @@ class Product {
     material,
     season,
     manufacturer,
+    receiptDate,
   ) {
     this.category = category;
     this.id = id;
@@ -124,6 +126,7 @@ class Product {
     this.material = material;
     this.season = season;
     this.manufacturer = manufacturer;
+    this.receiptDate = formatDate(ExcelDateToJSDate(receiptDate));
   }
 }
 
@@ -198,12 +201,35 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[14],
         obj[15],
         obj[16],
+        obj[17],
       ),
     );
   }
 
   return products;
 };
+
+function ExcelDateToJSDate(date) {
+  return new Date(Math.round((date - 25569) * 86400 * 1000));
+}
+
+function formatDate(date) {
+  // Get the day, month, and year from the date object
+  let day = date.getDate();
+  let month = date.getMonth() + 1; // Months are zero-based
+  const year = date.getFullYear().toString().slice(-2); // Get last two digits of the year
+
+  // Add leading zeros to day and month if necessary
+  if (day < 10) {
+    day = `0${day}`;
+  }
+  if (month < 10) {
+    month = `0${month}`;
+  }
+
+  // Return the formatted date string
+  return `${day}.${month}.${year}`;
+}
 
 const groupProductsByCategory = (products) => {
   const productMap = products.reduce((acc, product) => {

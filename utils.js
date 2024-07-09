@@ -37,6 +37,7 @@ const mapWorksheetToProducts = (worksheet) => {
         obj[14],
         obj[15],
         obj[16],
+        obj[17],
       ),
     );
   }
